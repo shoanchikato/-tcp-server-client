@@ -28,20 +28,38 @@ func handleConn(conn net.Conn) {
 	defer conn.Close()
 
 	for {
-		msg := make([]byte, 1024)
-		_, err := conn.Read(msg)
+		msg, err := read(conn)
 		if err != nil {
-			log.Println("Error reading message:", err)
 			break
 		}
 
-		log.Println("Message from client:", string(msg))
-
-		_, err = conn.Write([]byte("From client: " + string(msg)))
+		err = write(conn, msg)
 		if err != nil {
-			log.Println("Error writing client:", err)
 			break
 		}
 	}
 
+}
+
+func write(conn net.Conn, msg []byte) error {
+	_, err := conn.Write([]byte("From client: " + string(msg)))
+	if err != nil {
+		log.Println("Error writing client:", err)
+		return err
+	}
+
+	return nil
+}
+
+func read(conn net.Conn) ([]byte, error) {
+	msg := make([]byte, 1024)
+	_, err := conn.Read(msg)
+	if err != nil {
+		log.Println("Error reading message:", err)
+		return msg, err
+	}
+
+	log.Println("Message from client:", string(msg))
+
+	return msg, nil
 }
