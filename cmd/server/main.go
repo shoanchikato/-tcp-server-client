@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net"
+	"tcp-server-client/chat"
 )
 
 func main() {
@@ -13,6 +14,8 @@ func main() {
 
 	defer listener.Close()
 
+	chat := chat.NewChat(write)
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -20,23 +23,28 @@ func main() {
 			break
 		}
 
-		go handleConn(conn)
+		go handleConn(conn, chat)
 	}
 }
 
-func handleConn(conn net.Conn) {
+func handleConn(conn net.Conn, chat chat.Chat) {
 	defer conn.Close()
 
 	for {
+
 		msg, err := read(conn)
 		if err != nil {
 			break
 		}
 
-		err = write(conn, msg)
-		if err != nil {
-			break
-		}
+		chat.Command(conn, string(msg))
+
+		defer chat.Leave(conn)
+
+		// err = write(conn, msg)
+		// if err != nil {
+		// 	break
+		// }
 	}
 
 }
